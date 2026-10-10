@@ -5,27 +5,26 @@ const viewport = $('#mapViewport'), stage = $('#mapStage');
 let members = [], zoom = 1, panX = 0, panY = 0, dragging = false, dragStart = null;
 const activePointers = new Map(); let pinchStart = null;
 
-// 手工按 public/china-map.jpg 的裁切范围校准：坐标是裁切图内的百分比位置。
-// 高清矢量省界可替换底图；当前点位用于将省份气泡放在对应省域的大致中心。
+// 坐标按根目录原始 map_china_2019.jpg 的完整画布（含南海诸岛和图例）校准。
 const provinces = [
-  { name:'北京', aliases:['北京市'], x:75.2,y:40.1 }, { name:'天津',aliases:['天津市'],x:76.5,y:42.1 },
-  { name:'河北',aliases:['河北省'],x:74.1,y:44.0 }, { name:'山西',aliases:['山西省'],x:69.2,y:44.0 },
-  { name:'内蒙古',aliases:['内蒙古自治区','内蒙古'],x:60.5,y:32.0 }, { name:'辽宁',aliases:['辽宁省'],x:85.3,y:34.6 },
-  { name:'吉林',aliases:['吉林省'],x:89.5,y:26.4 }, { name:'黑龙江',aliases:['黑龙江省'],x:89.1,y:15.4 },
-  { name:'上海',aliases:['上海市'],x:85.2,y:63.4 }, { name:'江苏',aliases:['江苏省'],x:81.2,y:58.9 },
-  { name:'浙江',aliases:['浙江省'],x:84.8,y:68.7 }, { name:'安徽',aliases:['安徽省'],x:75.0,y:61.4 },
-  { name:'福建',aliases:['福建省'],x:83.7,y:79.0 }, { name:'江西',aliases:['江西省'],x:77.8,y:70.8 },
-  { name:'山东',aliases:['山东省'],x:81.1,y:47.7 }, { name:'河南',aliases:['河南省'],x:71.3,y:54.5 },
-  { name:'湖北',aliases:['湖北省'],x:69.6,y:63.4 }, { name:'湖南',aliases:['湖南省'],x:72.5,y:73.6 },
-  { name:'广东',aliases:['广东省'],x:82.0,y:84.5 }, { name:'广西',aliases:['广西壮族自治区','广西'],x:67.8,y:83.1 },
-  { name:'海南',aliases:['海南省'],x:64.3,y:94.7 }, { name:'重庆',aliases:['重庆市'],x:63.4,y:67.8 },
-  { name:'四川',aliases:['四川省'],x:56.6,y:64.7 }, { name:'贵州',aliases:['贵州省'],x:67.8,y:75.0 },
-  { name:'云南',aliases:['云南省'],x:56.0,y:80.0 }, { name:'西藏',aliases:['西藏自治区','西藏'],x:23.0,y:60.0 },
-  { name:'陕西',aliases:['陕西省'],x:63.4,y:52.5 }, { name:'甘肃',aliases:['甘肃省'],x:50.5,y:43.6 },
-  { name:'青海',aliases:['青海省'],x:38.6,y:51.4 }, { name:'宁夏',aliases:['宁夏回族自治区','宁夏'],x:57.8,y:43.7 },
-  { name:'新疆',aliases:['新疆维吾尔自治区','新疆'],x:21.5,y:30.6 }, { name:'台湾',aliases:['台湾省','台湾'],x:88.4,y:80.5 },
-  { name:'香港',aliases:['香港特别行政区','香港'],x:78.3,y:88.6 }, { name:'澳门',aliases:['澳门特别行政区','澳门'],x:77.3,y:88.9 },
-  { name:'海外',aliases:['海外'],x:8.5,y:91.5 }
+  { name:'北京', aliases:['北京市'], x:74.0,y:31.6 }, { name:'天津',aliases:['天津市'],x:76.3,y:33.0 },
+  { name:'河北',aliases:['河北省'],x:73.7,y:34.3 }, { name:'山西',aliases:['山西省'],x:68.1,y:35.3 },
+  { name:'内蒙古',aliases:['内蒙古自治区','内蒙古'],x:64.0,y:27.0 }, { name:'辽宁',aliases:['辽宁省'],x:84.7,y:27.5 },
+  { name:'吉林',aliases:['吉林省'],x:88.0,y:22.4 }, { name:'黑龙江',aliases:['黑龙江省'],x:89.0,y:14.0 },
+  { name:'上海',aliases:['上海市'],x:88.7,y:45.0 }, { name:'江苏',aliases:['江苏省'],x:82.5,y:43.6 },
+  { name:'浙江',aliases:['浙江省'],x:84.6,y:50.4 }, { name:'安徽',aliases:['安徽省'],x:78.6,y:45.3 },
+  { name:'福建',aliases:['福建省'],x:82.5,y:55.6 }, { name:'江西',aliases:['江西省'],x:76.3,y:54.5 },
+  { name:'山东',aliases:['山东省'],x:81.3,y:37.3 }, { name:'河南',aliases:['河南省'],x:70.9,y:42.1 },
+  { name:'湖北',aliases:['湖北省'],x:69.4,y:47.6 }, { name:'湖南',aliases:['湖南省'],x:68.8,y:54.3 },
+  { name:'广东',aliases:['广东省'],x:72.0,y:60.5 }, { name:'广西',aliases:['广西壮族自治区','广西'],x:63.2,y:63.1 },
+  { name:'海南',aliases:['海南省'],x:66.0,y:68.8 }, { name:'重庆',aliases:['重庆市'],x:60.0,y:50.6 },
+  { name:'四川',aliases:['四川省'],x:51.0,y:49.0 }, { name:'贵州',aliases:['贵州省'],x:59.0,y:55.8 },
+  { name:'云南',aliases:['云南省'],x:48.0,y:59.9 }, { name:'西藏',aliases:['西藏自治区','西藏'],x:19.4,y:44.7 },
+  { name:'陕西',aliases:['陕西省'],x:62.6,y:40.1 }, { name:'甘肃',aliases:['甘肃省'],x:50.0,y:36.0 },
+  { name:'青海',aliases:['青海省'],x:39.0,y:39.0 }, { name:'宁夏',aliases:['宁夏回族自治区','宁夏'],x:56.4,y:36.7 },
+  { name:'新疆',aliases:['新疆维吾尔自治区','新疆'],x:20.8,y:28.7 }, { name:'台湾',aliases:['台湾省','台湾'],x:87.5,y:59.6 },
+  { name:'香港',aliases:['香港特别行政区','香港'],x:76.0,y:64.0 }, { name:'澳门',aliases:['澳门特别行政区','澳门'],x:73.6,y:66.4 },
+  { name:'海外',aliases:['海外'],x:10.0,y:64.0 }
 ];
 const provinceByName = new Map();
 for (const p of provinces) for (const alias of [p.name,...p.aliases]) provinceByName.set(normalizeProvince(alias),p);
@@ -83,7 +82,7 @@ function renderBubbles() {
   const layer=$('#provinceBubbles'); layer.replaceChildren();
   const grouped=provinces.map(p=>({province:p,...membersForProvince(p)})).filter(x=>x.count>0).sort((a,b)=>a.count-b.count);
   for(const item of grouped){
-    const diameter=Math.min(136,42+Math.sqrt(item.count)*19);
+    const diameter=Math.min(136,26+Math.sqrt(item.count)*20);
     const button=document.createElement('button'); button.type='button'; button.className='province-bubble';
     button.style.left=`${item.province.x}%`;button.style.top=`${item.province.y}%`;button.style.width=`${diameter}px`;button.style.height=`${diameter}px`;button.style.zIndex=String(Math.round(diameter));
     button.setAttribute('aria-label',`${item.province.name}，${item.count} 位成员`);
@@ -165,6 +164,9 @@ $('#closeDialog').addEventListener('click',()=>joinDialog.close());$('#closeSid'
 $('#copySid').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#sidValue').textContent);$('#copySid').textContent='已复制';}catch{$('#copySid').textContent='请长按代码复制';}});
 form.addEventListener('submit',async e=>{
   e.preventDefault();$('#formError').textContent='';const data=Object.fromEntries(new FormData(form));
+  const hasHome=Boolean(data.homeProvince&&data.homeCity),hasActive=Boolean(data.activeProvince&&data.activeCity);
+  const partialHome=Boolean(data.homeProvince||data.homeCity)&&!hasHome,partialActive=Boolean(data.activeProvince||data.activeCity)&&!hasActive;
+  if((!hasHome&&!hasActive)||partialHome||partialActive){$('#formError').textContent='家乡位置和活跃位置至少填写一项；填写某一项时请同时选择省份和城市。';return;}
   const payload={nickname:data.nickname,biliUid:data.biliUid,sid:data.sid||localStorage.getItem(SID_KEY)||'',hometown:{province:data.homeProvince,city:data.homeCity},active:{province:data.activeProvince,city:data.activeCity}};
   $('#submitButton').disabled=true;$('#submitButton').textContent='正在保存…';
   try{const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await r.json();

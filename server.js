@@ -7,6 +7,7 @@ const ROOT = __dirname;
 const PUBLIC = path.join(ROOT, 'public');
 const DATA_DIR = path.join(ROOT, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'members.json');
+const BLOCKED_WORDS_FILE = path.join(DATA_DIR, 'blocked_words.json');
 const PORT = Number(process.env.PORT || 3000);
 fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]\n', { mode: 0o600 });
@@ -17,6 +18,13 @@ function sidFor() { return crypto.randomBytes(8).toString('hex').toUpperCase(); 
 function send(res, status, value) { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(value)); }
 function body(req) { return new Promise((resolve, reject) => { let raw = ''; req.on('data', chunk => { raw += chunk; if (raw.length > 16_384) reject(new Error('表单内容过大')); }); req.on('end', () => { try { resolve(JSON.parse(raw || '{}')); } catch { reject(new Error('无法解析请求内容')); } }); req.on('error', reject); }); }
 function clean(v, max) { return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
+function nicknameIsBlocked(nickname) {
+  let words;
+  try { words = JSON.parse(fs.readFileSync(BLOCKED_WORDS_FILE, 'utf8')); } catch { words = []; }
+  if (!Array.isArray(words)) return false;
+  const candidate = nickname.normalize('NFKC').toLocaleLowerCase('zh-CN');
+  return words.some(word => typeof word === 'string' && word.trim() && candidate.includes(word.trim().normalize('NFKC').toLocaleLowerCase('zh-CN')));
+}
 function handler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname.startsWith('/api/')) {
@@ -30,7 +38,12 @@ function handler(req, res) {
         const nickname = clean(input.nickname, 40), biliUid = clean(input.biliUid, 30);
         const region = x => ({ province: clean(x?.province, 30), city: clean(x?.city, 40) });
         const hometown = region(input.hometown), active = region(input.active);
-        if (!nickname || !hometown.province || !hometown.city || !active.province || !active.city) return send(res, 400, { error: '请填写昵称、家乡和最近活跃地区。' });
+        if (!nickname) return send(res, 400, { error: '请填写昵称。' });
+        if (nicknameIsBlocked(nickname)) return send(res, 400, { error: '不要乱填名字哦！', blockedNickname: true });
+        const hasHome = Boolean(hometown.province && hometown.city), hasActive = Boolean(active.province && active.city);
+        const partialHome = Boolean(hometown.province || hometown.city) && !hasHome;
+        const partialActive = Boolean(active.province || active.city) && !hasActive;
+        if (!hasHome && !hasActive || partialHome || partialActive) return send(res, 400, { error: '家乡位置和活跃位置至少填写一项；填写某一项时请同时选择省份和城市。' });
         const members = load(), key = nickname.normalize('NFC').toLocaleLowerCase('zh-CN');
         const suppliedSid = clean(input.sid, 40).toUpperCase();
         const prior = members.find(m => m.nickname.normalize('NFC').toLocaleLowerCase('zh-CN') === key);

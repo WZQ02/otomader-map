@@ -1,0 +1,3 @@
+@echo off
+title Æô¶¯²âÊÔ·şÎñ...
+node server.js

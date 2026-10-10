@@ -1,0 +1,8 @@
+{
+  "name": "onmader-map-alpha",
+  "version": "1.0.0",
+  "private": true,
+  "description": "音MADer 地图 (Alpha)",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

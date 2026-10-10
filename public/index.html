@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" type="image/png" href="https://wzq02.top/images/icon.png" />
+  <link rel="shortcut icon" type="image/png" href="https://wzq02.top/images/icon.png" />
+  <title>音 MADer 地图 (Alpha)</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>音 MADer 地图 (Alpha)</h1>
+    <div class="header-actions">
+      <div class="search-wrap">
+        <label class="search-box"><span class="search-icon" aria-hidden="true"></span><input id="searchInput" type="search" autocomplete="off" placeholder="搜索作者昵称、所在地区……" aria-label="搜索作者昵称、所在地区"><kbd>/</kbd></label>
+        <section class="search-results" id="searchResults" hidden aria-live="polite"></section>
+      </div>
+      <button class="join-button" id="joinButton">让我加入吧！</button>
+      <button class="sid-button" id="showSid" hidden aria-label="查看我的神秘代码" title="查看我的神秘代码">?</button>
+    </div>
+  </header>
+  <main class="map-page">
+    <section class="map-count" aria-live="polite"><strong id="memberCount">—</strong><span>名成员</span></section>
+    <section class="map-viewport" id="mapViewport" aria-label="音 MADer 成员省份分布地图">
+      <div class="map-stage" id="mapStage">
+        <img class="map-image" id="mapImage" src="/china-map.jpg" alt="中国省级行政区地图">
+        <div class="province-bubbles" id="provinceBubbles"></div>
+        <div class="map-missing" id="mapMissing" hidden><b>地图底图暂不可用</b><span>请确认 public/china-map.jpg 文件存在，并重启网页服务。</span></div>
+      </div>
+    </section>
+    <nav class="zoom-controls" aria-label="地图缩放控制"><button id="zoomIn" aria-label="放大地图">+</button><button id="zoomOut" aria-label="缩小地图">−</button><button id="resetZoom" aria-label="重置地图视图">↶</button></nav>
+    <footer class="site-footer">本站启发自 <a href="https://passthem.top/" target="_blank" rel="noopener noreferrer">Passthem</a> 以前开发的音 MADer 地图，此为重制版。</footer>
+  </main>
+
+  <dialog id="provinceDialog" class="province-dialog"><section class="province-panel"><button class="close" id="closeProvince" aria-label="关闭">×</button><p class="eyebrow">COMMUNITY IN THIS PROVINCE</p><h2 id="provinceTitle">湖北的音 MADer</h2><p class="province-summary" id="provinceSummary"></p><div class="province-groups" id="provinceGroups"></div></section></dialog>
+  <dialog id="joinDialog"><form id="joinForm" method="dialog"><div class="modal-head"><div><p class="eyebrow">YOUR PLACE IN THE COMMUNITY</p><h2 id="formTitle">加入地图</h2></div><button class="close" type="button" id="closeDialog" aria-label="关闭">×</button></div><label class="field">你的昵称是什么：<input name="nickname" required maxlength="40" autocomplete="nickname" placeholder="怎么称呼你？"></label><label class="field">你的B站UID（可选）：<input name="biliUid" maxlength="30" inputmode="numeric" placeholder="留空也没关系"></label><div class="field-group"><label class="field">你的家乡位于哪个省，哪个市：<div class="region-row region-selects"><select name="homeProvince" required><option value="">请选择省份</option></select><select name="homeCity" required disabled><option value="">请先选择省份</option></select></div></label><button type="button" class="locate" data-target="hometown">◎ 使用当前位置</button></div><div class="field-group"><label class="field">你最近活跃于哪个省，哪个市：<div class="region-row region-selects"><select name="activeProvince" required><option value="">请选择省份</option></select><select name="activeCity" required disabled><option value="">请先选择省份</option></select></div></label><button type="button" class="locate" data-target="active">◎ 使用当前位置</button></div><div class="sid-block" id="sidBlock" hidden><p id="sidPrompt">你之前似乎已经加入过地图了哦？如果确实是你，请在下方填写神秘代码：</p><input name="sid" autocomplete="off" placeholder="填写神秘代码"><small>在原先填写信息的设备上打开网页，并点击带？的按钮，即可查看神秘代码<br>如果找不到神秘代码，请向站长咨询。</small></div><p class="form-error" id="formError" role="alert"></p><button class="submit" type="submit" id="submitButton">保存并加入地图 <span>→</span></button><p class="privacy-note">信息提交后将公开显示于地图，请勿填写不希望公开的个人信息。</p></form></dialog>
+  <dialog id="sidDialog"><div class="sid-modal"><button class="close" id="closeSid" aria-label="关闭">×</button><p class="eyebrow">YOUR MAP SID</p><h2>你的神秘代码</h2><p>请保存好它。更换设备后，可用它验证身份并修改资料。</p><code id="sidValue">—</code><button class="submit" id="copySid">复制代码</button></div></dialog>
+  <script src="/locations.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>
